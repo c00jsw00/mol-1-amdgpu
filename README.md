@@ -32,6 +32,64 @@
 
 
 
+## ⚡ AMD GPU (ROCm) — 安裝與測試
+
+本分支（constraint，`mol cpred`）已移植到 AMD ROCm，patch 已在 repo 內；
+`main` 分支是 mol-1-base 同款移植。完整說明：[`AMD_ROCM.md`](AMD_ROCM.md)。
+
+實測環境：2x AMD Radeon AI PRO R9700（gfx1201 / RDNA4，32 GB）、Ubuntu 24.04、
+Python 3.13、PyTorch 2.10.0+rocm7.0、triton_rocm 3.6.0。
+
+### 安裝（AMD）
+
+```bash
+git clone -b constraint https://github.com/c00jsw00/mol-1-amdgpu && cd mol-1-amdgpu
+python3 -m venv .venv-rocm && source .venv-rocm/bin/activate
+
+pip install torch --index-url https://download.pytorch.org/whl/rocm7.0  # 先裝 ROCm 版 torch
+pip install -e .            # 注意：AMD 不要裝 ".[cuda]"（CUDA-only 元件）
+
+export MOL_ROOT_DIR="$PWD/data"
+bash scripts/database/download_mol_data.sh          # 參考資料 ~0.3 GB
+mkdir -p ${MOL_ROOT_DIR}/checkpoint
+wget https://mol-1-release.oss-cn-shanghai.aliyuncs.com/checkpoint/mol-1-constraint.pt \
+  -O ${MOL_ROOT_DIR}/checkpoint/mol-1-constraint.pt # mol cpred 權重
+wget https://mol-1-release.oss-cn-shanghai.aliyuncs.com/checkpoint/mol-1-base.pt \
+  -O ${MOL_ROOT_DIR}/checkpoint/mol-1-base.pt       # mol pred 權重（可選）
+```
+
+### 測試 example（7pzb constraint binding site，實測通過）
+
+```bash
+export LAYERNORM_TYPE=torch       # 跳過 CUDA-only fused LayerNorm
+CUDA_VISIBLE_DEVICES=0 mol cpred \
+  -i examples/7pzb_constraint_binding_site/input.json \
+  -o ./output --sample 1 \
+  --config examples/amd_configs/dbg_msa_small.json \
+  --triatt_kernel triattention --trimul_kernel torch
+```
+
+實測：666 s、peak 14.5 GB VRAM、pLDDT 89.7 / pTM 0.928 / iTM 0.928
+（JSON 輸出存檔於 `examples/results_7pzb_amd/cpred_msa2048_summary_confidence.json`）。
+
+**為什麼要附 `--config`**：7pzb 的完整 MSA（12424 rows）在 mol-1-base 與
+mol-1-constraint 都會在 recycle 中途數值發散（bf16/fp32、triattention 或 torch
+kernel 皆然），推論會「成功」但結果全 NaN。`examples/amd_configs/dbg_msa_small.json`
+把 inference MSA 取樣壓到 2048 rows 即可穩定跑通；分析見 `AMD_ROCM.md`。
+
+其他可用設定：
+- `examples/amd_configs/dbg_numerics.json` — 開啟每個 submodule 的 amax log，
+  配合 `NonFiniteTensorError` 定位發散點。
+- `--use_msa False` — 完全不用 MSA 也可跑通（品質較低：pLDDT 84.6 / iTM 0.22）。
+- `examples/amd_configs/7pzb_base_input.json` — 不帶 constraint 的對照輸入（給 `mol pred`）。
+
+### AMD 注意事項
+
+- 務必帶 `--triatt_kernel triattention --trimul_kernel torch`
+  （triangular-multiplicative Triton kernel 尚未移植）。
+- fused LayerNorm 是 CUDA-only，務必 `LAYERNORM_TYPE=torch`。
+- 數值異常時可試 `-d fp32`（慢 2–3 倍）。
+
 ## Install
 
 You can install `Mol-1-constraint` with the following commands:
