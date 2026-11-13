@@ -1,0 +1,35 @@
+[
+  {
+    "name": "prot_ligand_site",
+    "sequences": [
+      {
+        "proteinChain": {
+          "sequence": "SGFRKMAFPSGKVEGCMVQVTCGTTTLNGLWLDDVVYCPRHVICTSEDMLNPNYEDLLIRKSNHNFLVQAGNVQLRVIGHSMQNCVLKLKVDTANPKTPKYKFVRIQPGQTFSVLACYNGSPSGVYQCAMRPNFTIKGSFLNGSCGSVGFNIDYDCVSFCYMHHMELPTGVHAGTDLEGNFYGPFVDRQTAQAAGTDTTITVNVLAWLYAAVINGDRWFLNRFTTTLNDFNLVAMKYNYEPLTQDHVDILGPLSAQTGIAVLDMCASLKELLQNGMNGRTILGSALLEDEFTPFDVVRQCSGVTFQ",
+          "count": 1,
+          "id": ["A"]
+        }
+      },
+      {
+        "ligand": {
+          "ligand": "CCC(C)C(C(=O)NC(CC1CCCNC1=O)C=O)NC(=O)C=CC2=CC=CC=C2",
+          "count": 1,
+          "id": ["B"]
+        }
+      }
+    ],
+    "constraints": {
+      "site": {
+        "source_chains": ["A"],
+        "partner_chains": ["B"],
+        "residue_ids": [
+          ["A", 41],
+          ["A", 49],
+          ["A", 142],
+          ["A", 143],
+          ["A", 144],
+          ["A", 145]
+        ]
+      }
+    }
+  }
+]

@@ -81,6 +81,27 @@ constraint 只是引導推論，不保證滿足、也不會篩掉候選。
 推論預設 20 recycles、200 diffusion steps，可用 `--cycle` / `--step` 覆寫；
 注意 `--use_default_params true` 會強制 20/200。一般 CLI 選項優先於 `--config` JSON。
 
+## 蛋白質序列 + SMILES 配體 + SITE constraint example（實測通過）
+
+`examples/prot_ligand_site_example/`：306 殘基蛋白質 + SMILES 配體，SITE
+constraint 指定 A 鏈殘基 41, 49, 142–145 為配體結合位點。
+
+```bash
+# 離線版（附 ./msa/non_pairing.a3m，434 rows，不必再附 MSA 取樣設定）
+CUDA_VISIBLE_DEVICES=0 mol cpred -i examples/prot_ligand_site_example/input.json \
+  -o ./output --sample 1 --triatt_kernel triattention --trimul_kernel torch
+
+# 或線上搜 MSA
+CUDA_VISIBLE_DEVICES=0 mol cpred -i examples/prot_ligand_site_example/input_search_msa.json \
+  -o ./output --sample 1 --triatt_kernel triattention --trimul_kernel torch
+```
+
+實測（單張 R9700）：推論 74.6 s、peak 5,458 MiB、pLDDT 95.0 / pTM 0.971 /
+ipTM 0.947。constraint 驗證：六個指定殘基皆與配體形成接觸（3.0–3.7 Å），
+配體完整接觸譜為殘基 41, 49, 140–145, 163–168, 172, 187–191。結果已存檔於
+`examples/prot_ligand_site_example/predictions/`（CIF + confidence JSON）。
+本例 MSA 只有 434 rows，遠低於會發散的量級，不需要 `--config` 取樣設定。
+
 ## 預測自己的輸入
 
 輸入是一份 job 列表 JSON，每個 job 的 `sequences` 可含 `proteinChain`、
