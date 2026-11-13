@@ -1,0 +1,32 @@
+{
+  "experimental": "7WOF (SARS-CoV-2 Mpro + GC376 ligand 5IZ)",
+  "site_residues": [
+    41,
+    49,
+    142,
+    143,
+    144,
+    145
+  ],
+  "note": "Kabsch on common CA; ligand 30/30 heavy-atom graph match; same molecule in all three.",
+  "metrics": {
+    "mol-1": {
+      "protein_CA_RMSD_A": 0.71,
+      "site_CA_RMSD_globalfit_A": 0.58,
+      "site_CA_RMSD_ownfit_A": 0.33,
+      "ligand_RMSD_proteinfit_A": 1.28,
+      "ligand_RMSD_bestfit_A": 1.09,
+      "ligand_matched_atoms": 30,
+      "CA_common_residues": 303
+    },
+    "mol-1-constraint": {
+      "protein_CA_RMSD_A": 0.69,
+      "site_CA_RMSD_globalfit_A": 0.56,
+      "site_CA_RMSD_ownfit_A": 0.33,
+      "ligand_RMSD_proteinfit_A": 0.66,
+      "ligand_RMSD_bestfit_A": 0.49,
+      "ligand_matched_atoms": 30,
+      "CA_common_residues": 303
+    }
+  }
+}

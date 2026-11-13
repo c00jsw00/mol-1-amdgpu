@@ -102,6 +102,37 @@ ipTM 0.947。constraint 驗證：六個指定殘基皆與配體形成接觸（3.
 `examples/prot_ligand_site_example/predictions/`（CIF + confidence JSON）。
 本例 MSA 只有 434 rows，遠低於會發散的量級，不需要 `--config` 取樣設定。
 
+## 與實驗結構 7WOF 的 RMSD 比較（實測）
+
+上一節的序列其實是 SARS-CoV-2 Mpro（3CL 蛋白酶），SMILES 配體是 GC376
+抑制劑。實驗結構 PDB **7WOF**（Mpro + 5IZ = GC376，同一分子、30 個重原子）
+已附在 `examples/prot_ligand_site_example/7WOF.pdb`，並附上 mol-1 base 分支
+對同一輸入的預測 `predictions/mol1_base_sample_0.cif`，可直接重跑比較：
+
+```bash
+python examples/prot_ligand_site_example/compare_with_7wof.py   # RMSD 表 + npy
+python examples/prot_ligand_site_example/plot_overlay_7wof.py   # 三結構疊合圖
+```
+
+方法：以 7WOF 與兩預測共有的 303 個 CA（殘基 1–303，無 gap）做 Kabsch
+疊合；配體以 RDKit 圖論對映做 30/30 原子一一配對。
+
+| 對 7WOF | mol-1 (base) | mol-1-constraint |
+|---|---:|---:|
+| 蛋白質 CA RMSD | 0.71 Å | 0.69 Å |
+| binding-site 殘基 CA（全局疊合下） | 0.58 Å | 0.56 Å |
+| GC376 配體 RMSD（蛋白質疊合下） | 1.28 Å | **0.66 Å** |
+| GC376 配體 best-fit RMSD | 1.09 Å | **0.49 Å** |
+
+三者疊合圖（左：全protein CA trace + 配體；右：結合口袋放大）：
+
+![7WOF overlay](examples/prot_ligand_site_example/overlay_7wof.png)
+
+結論：兩種模型都重建實驗摺頁（CA RMSD < 0.75 Å）；加了 SITE constraint
+後配體擺位明顯更靠近實驗（0.66 vs 1.28 Å）。實驗配體接觸殘基
+41, 49, 140–145, 163–168, 172, 187–189 與預測接觸譜一致。
+數值存檔於 `examples/prot_ligand_site_example/rmsd_7wof.json`。
+
 ## 預測自己的輸入
 
 輸入是一份 job 列表 JSON，每個 job 的 `sequences` 可含 `proteinChain`、
