@@ -1,0 +1,6 @@
+{
+  "constraint_numerics": {
+    "detailed": true
+  },
+  "inference_runtime_checks": false
+}

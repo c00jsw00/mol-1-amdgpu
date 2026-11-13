@@ -39,6 +39,13 @@ def get_tag(x: int) -> int:
     return math.ceil(x / 32) * 32
 
 
+# Triton on ROCm cannot compile tl.dot(input_precision="tf32"); the kernels
+# select input_precision="ieee" via deterministic=True, which is the only
+# precision HIP supports. At inference this changes nothing else: no backward
+# pass runs and dropout_p is 0.0 on both branches.
+_FORCE_IEEE_PRECISION = bool(getattr(torch.version, "hip", None))
+
+
 class TriAttentionFunction(torch.autograd.Function):
     @staticmethod
     def forward(
@@ -50,6 +57,8 @@ class TriAttentionFunction(torch.autograd.Function):
         Bias2: torch.Tensor,
         deterministic: bool = False,
     ) -> torch.Tensor:
+        if _FORCE_IEEE_PRECISION:
+            deterministic = True
         Q = Q.contiguous()
         K = K.contiguous()
         V = V.contiguous()

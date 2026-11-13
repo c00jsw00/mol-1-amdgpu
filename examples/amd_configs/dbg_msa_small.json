@@ -1,0 +1,16 @@
+{
+  "constraint_numerics": {
+    "detailed": true
+  },
+  "inference_runtime_checks": false,
+  "data": {
+    "msa": {
+      "sample_cutoff": {
+        "test": 2048
+      }
+    }
+  },
+  "model": {
+    "msa_max_size": 2048
+  }
+}

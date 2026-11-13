@@ -67,6 +67,24 @@ def install_finite_hooks(model, *, detailed=False):
             continue
 
         def check(_module, _inputs, output, name=name):
+            # diagnostic: log magnitude growth (not only non-finite)
+            def _mag(v):
+                if torch.is_tensor(v) and v.numel():
+                    yield v.abs().amax().item()
+                elif isinstance(v, (tuple, list)):
+                    for x in v:
+                        yield from _mag(x)
+                elif isinstance(v, Mapping):
+                    for x in v.values():
+                        yield from _mag(x)
+            m = max(_mag(output), default=0.0)
+            mi = max(_mag(_inputs), default=0.0)
+            if mi > 1e5 and ("outer_product" in name or name.endswith(("blocks.0", "blocks.1"))):
+                logging.getLogger("mol.constraint.runtime").warning(
+                    "MAGIN model.%s.input = %.4g", name, mi)
+            if m > 1e3:
+                logging.getLogger("mol.constraint.runtime").warning(
+                    "MAGNITUDE model.%s.output = %.4g", name, m)
             require_finite(output, f"model.{name}.output")
 
         handles.append(module.register_forward_hook(check))
