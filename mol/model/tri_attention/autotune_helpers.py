@@ -39,7 +39,8 @@ def get_config_dir() -> Path:
     rank = f"{DIST_WRAPPER.rank}"
     target_dir = tri_cache_root / rank
     if not target_dir.exists():
-        target_dir.mkdir(parents=True, exist_ok=False)
+        # exist_ok=True: under torchrun, two ranks can race on this mkdir.
+        target_dir.mkdir(parents=True, exist_ok=True)
         precache_dir = tri_cache_root / "0"
         if precache_dir.exists() and any(precache_dir.iterdir()):
             ret = os.system(f"cp {precache_dir}/* {target_dir}")

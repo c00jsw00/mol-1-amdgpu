@@ -148,10 +148,30 @@ class Autotuner(triton.runtime.Autotuner):
                 used_cached_result = False
                 pruned_configs = self.prune_configs(kwargs)
                 bench_start = time.time()
-                timings = {
-                    config: self._bench(*args, config=config, **kwargs)
-                    for config in pruned_configs
-                }
+                timings = {}
+                for config in pruned_configs:
+                    try:
+                        timings[config] = self._bench(
+                            *args, config=config, **kwargs
+                        )
+                    except Exception as bench_error:
+                        # Some backends (notably Triton on ROCm/RDNA) fail to
+                        # compile particular block/warp combinations. Skip the
+                        # offending config instead of aborting the whole
+                        # autotune; the remaining configs are still benched.
+                        logger.warning(
+                            "autotune: skipping config %s (num_warps=%s, "
+                            "num_stages=%s): %s",
+                            config.all_kwargs(),
+                            config.num_warps,
+                            config.num_stages,
+                            bench_error,
+                        )
+                if not timings:
+                    raise RuntimeError(
+                        f"no autotune config for {self.fn.fn.__name__} "
+                        "compiled on this backend"
+                    )
                 bench_end = time.time()
                 self.bench_time = bench_end - bench_start
                 self.cache[key] = builtins.min(timings, key=timings.get)
