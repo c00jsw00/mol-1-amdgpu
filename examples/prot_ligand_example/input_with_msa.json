@@ -1,0 +1,20 @@
+[
+  {
+    "name": "prot_ligand_1",
+    "sequences": [
+      {
+        "proteinChain": {
+          "sequence": "SGFRKMAFPSGKVEGCMVQVTCGTTTLNGLWLDDVVYCPRHVICTSEDMLNPNYEDLLIRKSNHNFLVQAGNVQLRVIGHSMQNCVLKLKVDTANPKTPKYKFVRIQPGQTFSVLACYNGSPSGVYQCAMRPNFTIKGSFLNGSCGSVGFNIDYDCVSFCYMHHMELPTGVHAGTDLEGNFYGPFVDRQTAQAAGTDTTITVNVLAWLYAAVINGDRWFLNRFTTTLNDFNLVAMKYNYEPLTQDHVDILGPLSAQTGIAVLDMCASLKELLQNGMNGRTILGSALLEDEFTPFDVVRQCSGVTFQ",
+          "count": 1,
+          "unpairedMsaPath": "./examples/prot_ligand_example/msa/non_pairing.a3m"
+        }
+      },
+      {
+        "ligand": {
+          "ligand": "CCC(C)C(C(=O)NC(CC1CCCNC1=O)C=O)NC(=O)C=CC2=CC=CC=C2",
+          "count": 1
+        }
+      }
+    ]
+  }
+]

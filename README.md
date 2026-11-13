@@ -73,6 +73,25 @@ CUDA_VISIBLE_DEVICES=0 mol pred -i examples/7pzb_base_input.json \
 
 分析與對照實驗見 [`AMD_ROCM.md`](AMD_ROCM.md)。
 
+## 蛋白質序列 + SMILES 配體 example（實測通過）
+
+只有序列與配體 SMILES（無現成 MSA）的輸入：Mol-1 會自動跑 ColabFold MSA 搜尋。
+`examples/prot_ligand_example/`（306 殘基蛋白質 + 一個 SMILES 配體）：
+
+```bash
+# 線上搜 MSA（走 ColabFold MMseqs2 公伺服）
+CUDA_VISIBLE_DEVICES=0 mol pred -i examples/prot_ligand_example/input.json \
+  -o ./output --sample 1 --triatt_kernel triattention --trimul_kernel torch
+
+# 或離線：input_with_msa.json 已附 ./msa/non_pairing.a3m
+CUDA_VISIBLE_DEVICES=0 mol pred -i examples/prot_ligand_example/input_with_msa.json \
+  -o ./output --sample 1 --triatt_kernel triattention --trimul_kernel torch
+```
+
+實測（單張 R9700）：搜到 434 條 MSA、推論 93.75 s、peak 5,458 MiB、
+pLDDT 96.4 / pTM 0.976 / ipTM 0.978。結果已存檔於
+`examples/prot_ligand_example/predictions/`（CIF + confidence JSON）。
+
 ## 預測自己的輸入
 
 輸入是一份 job 列表 JSON，每個 job 的 `sequences` 可含 `proteinChain`、
