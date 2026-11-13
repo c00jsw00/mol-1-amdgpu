@@ -32,6 +32,65 @@
 
 
 
+## ⚡ AMD GPU (ROCm) — 安裝與測試
+
+本 fork 已把 Mol-1 移植到 AMD ROCm（patch 已在 repo 內）。
+**main 分支** = mol-1-base（`mol pred`）；**constraint 分支** = mol-1-constraint
+（`mol cpred`，見該分支 README / `AMD_ROCM.md`）。完整說明：[`AMD_ROCM.md`](AMD_ROCM.md)。
+
+實測環境：2x AMD Radeon AI PRO R9700（gfx1201 / RDNA4，32 GB）、Ubuntu 24.04、
+Python 3.13、PyTorch 2.10.0+rocm7.0、triton_rocm 3.6.0。
+
+### 安裝（AMD）
+
+```bash
+git clone https://github.com/c00jsw00/mol-1-amdgpu && cd mol-1-amdgpu
+python3 -m venv .venv-rocm && source .venv-rocm/bin/activate
+
+pip install torch --index-url https://download.pytorch.org/whl/rocm7.0  # 先裝 ROCm 版 torch
+pip install -e .            # 注意：AMD 不要裝 ".[cuda]"（CUDA-only 元件）
+
+export MOL_ROOT_DIR="$PWD/data"
+bash scripts/database/download_mol_data.sh          # 參考資料 ~0.3 GB
+mkdir -p ${MOL_ROOT_DIR}/checkpoint
+wget https://mol-1-release.oss-cn-shanghai.aliyuncs.com/checkpoint/mol-1-base.pt \
+  -O ${MOL_ROOT_DIR}/checkpoint/mol-1-base.pt       # 權重 ~2.2 GB（或讓首次推論自動下載）
+```
+
+### 測試 example（9fm7，實測通過）
+
+```bash
+export LAYERNORM_TYPE=torch       # 跳過 CUDA-only fused LayerNorm
+CUDA_VISIBLE_DEVICES=0 mol pred \
+  -i examples/examples_with_template/example_9fm7.json \
+  -o ./output --sample 1 \
+  --triatt_kernel triattention --trimul_kernel torch
+```
+
+實測：338 s、peak ~12 GB VRAM、pLDDT 91.5 / pTM 0.883 / iTM 0.831
+（結果存 `output/9fm7/seed_101/predictions/..._summary_confidence_sample_0.json`，
+跑完請確認 pLDDT 不是 NaN）。
+
+### 7pzb example（大 MSA，需附設定）
+
+完整 MSA（12424 rows）在 mol-1-base 與 mol-1-constraint 都會數值發散（bf16/fp32
+皆然，推論「成功」但 summary 全 NaN——見 `AMD_ROCM.md` 的分析）。
+用 repo 內的 MSA 取樣設定即可跑通：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 mol pred -i examples/7pzb_base_input.json \
+  -o ./output --sample 1 \
+  --config examples/amd_configs/msa_cutoff_2048.json \
+  --triatt_kernel triattention --trimul_kernel torch
+```
+
+### AMD 注意事項
+
+- 自訂輸入走 tri-attention kernel 時要帶
+  `--triatt_kernel triattention --trimul_kernel torch`。
+- fused LayerNorm 是 CUDA-only，務必 `LAYERNORM_TYPE=torch`。
+- 數值異常時可試 `-d fp32`（慢 2–3 倍）。
+
 ## Install
 
 You can install `Mol-1` with the following commands:
